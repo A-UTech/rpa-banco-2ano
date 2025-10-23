@@ -1,0 +1,6 @@
+# Conectar ao banco PostgreSQL
+DBNAME_1ANO="Nome do Database do Banco de onde os dados virão (no nosso caso é do primeiro ano)"
+DBNAME_2ANO="Nome do Database do Banco onde os dados serão inseridos (no nosso caso é o do sengundo ano)"
+USER="User do Server"
+PASSWORD='Senha do Server'
+HOST='Host do Server'

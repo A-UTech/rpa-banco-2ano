@@ -29,9 +29,12 @@ try:
 except Exception as e:
     print("Erro ao conectar com o banco de dados do 2°ano: ",e)
 
-# Inicialização de variáveis com o nome das tabelas para obter maior facilidade caso haja manutenção no código.
-tabelas_1ano = {"plano": ["id","nome","preco","armazenamento"], "condena":["id","nome","tipo"], "empresa":["id","nome","cnpj"]}
-tabelas_2ano = {"planos": ["id","nome","preco","armazenamento"], "condena":["id","nome","tipo"], "empresa":["id","nome"]}
+# Inicialização de variáveis com o nome das tabelas para obter maior facilidade caso haja manutenção no código.   regiao é o campo de estado da tabela de unidade
+tabelas_1ano = {"planos": ["id","nome","mensalidade","armazenamento"], "condenas":["id","nome","tipo_condena"], "empresas":["id","nome","cnpj","unidade","regiao","id_planos","senha"]}
+tabelas_2ano = {"planos": ["id","nome","preco","armazenamento"], "condena":["id","nome","tipo"], "duas_tabelas": {
+        "empresa": ["id", "nome"],
+        "unidade": ["cnpj", "nome", "estado",  "id_plano", "senha"]
+    }}
 
 # Função que realiza o RPA entre as duas tabelas
 def RPA_inter(tabela_1ano, colunas_1ano, tabela_2ano, colunas_2ano, conn_1ano_param, conn_2ano_param):
@@ -78,13 +81,113 @@ def RPA_inter(tabela_1ano, colunas_1ano, tabela_2ano, colunas_2ano, conn_1ano_pa
     except Exception as e:
         conn_2ano.rollback()
         print("Erro ao inserir/atualizar dados: ",e)
+        print(tabela_2ano)
     finally:
         cursor_1ano.close()
         cursor_2ano.close()
 
+
+def RPA_inter_empresa_unidade(tabela_1ano, colunas_1ano, tabelas_2ano, conn_1ano_param, conn_2ano_param):
+    cursor_1ano = conn_1ano_param.cursor()
+    cursor_2ano = conn_2ano_param.cursor()
+
+    # Divide tabelas e colunas
+    tabelas_destino = list(tabelas_2ano.keys())       # ['empresa', 'unidade']
+    colunas_destino = list(tabelas_2ano.values())     # [['id','nome'], ['cnpj','nome','estado','id_plano','senha']]
+
+    tabela_empresa = tabelas_destino[0]
+    tabela_unidade = tabelas_destino[1]
+    colunas_empresa = colunas_destino[0]
+    colunas_unidade = colunas_destino[1]
+    colunas_unidade.append("id_empresa")
+    print(colunas_unidade)
+    
+    colunas_empresa_str = ", ".join(colunas_empresa)
+    colunas_unidade_str = ", ".join(colunas_unidade)
+    
+
+    print(f"Inserindo de {tabela_1ano} em {tabela_empresa} e {tabela_unidade}...")
+
+    try:
+        # Busca os dados da tabela do 1º ano
+        cursor_1ano.execute(f"SELECT {', '.join(colunas_1ano)} FROM {tabela_1ano};")
+        dados = cursor_1ano.fetchall()
+
+        for linha in dados:
+            # Monta dict com nome das colunas
+            registro = dict(zip(colunas_1ano, linha))
+
+            print(registro)
+            nome_empresa = registro.get(f"{colunas_1ano[1]}")  
+            cnpj_unidade = registro.get(f"{colunas_1ano[2]}")
+
+            cnpj_unidade = str(cnpj_unidade)
+
+            # Verifica se já existe empresa
+            cursor_2ano.execute(f"SELECT verificar_empresa_existente('{cnpj_unidade}');")
+            resultado = cursor_2ano.fetchone()
+            print(resultado)
+            id_empresa = resultado[0] if resultado and resultado[0] else None
+
+            print(f"Processando empresa: {nome_empresa}, CNPJ: {cnpj_unidade}, ID Empresa: {id_empresa}")
+ 
+            if id_empresa is None:
+                cursor_2ano.execute(
+                    f"""
+                    INSERT INTO {tabela_empresa} ({colunas_1ano[1]})
+                    VALUES (%s)
+                    RETURNING id;
+                    """,
+                    (nome_empresa,)
+                )
+                id_empresa = cursor_2ano.fetchone()[0]
+            
+            id_empresa = int(id_empresa)
+            
+
+            placeholders = ", ".join(["%s"] * len(colunas_unidade))
+
+            # Exclude feito com for para não atualizar o id
+            excluded = ", ".join([
+                f"{col} = EXCLUDED.{col}" for col in colunas_unidade if col != "id"
+            ])
+            # Condição para fazer o update apenas se houver mudanças nos dados (exceto o id)
+            condicoes = " OR ".join([
+                f"{tabela_unidade}.{col} IS DISTINCT FROM EXCLUDED.{col}"
+                for col in colunas_unidade if col != "id"
+            ])
+            print("----------------------")
+            print(colunas_unidade)
+            print([registro.get(col) for col in colunas_unidade if col != "id_empresa"])
+            valores_unidade = [registro.get(col) for col in colunas_1ano if col != "id" and col != "nome"]
+            valores_unidade.append(id_empresa)
+
+            query = f"""
+                INSERT INTO {tabela_unidade} ({colunas_unidade_str})
+                VALUES ({placeholders})
+                ON CONFLICT (cnpj) DO UPDATE
+                SET {excluded}
+                WHERE {condicoes};
+            """
+            cursor_2ano.execute(query, valores_unidade)
+        conn_2ano_param.commit()
+        print("Dados de empresa/unidade inseridos com sucesso!")
+
+    except Exception as e:
+        conn_2ano_param.rollback()
+        print("Erro ao inserir empresa/unidade:", e)
+
+    finally:
+        cursor_1ano.close()
+        cursor_2ano.close()
+
+
+
+
 # Executa o RPA para cada tabela
 for (key_1, valor_1), (key_2, valor_2) in zip(tabelas_1ano.items(), tabelas_2ano.items()):
-    if key_1 == "empresa":
-        valor_1.remove("cnpj")  # Remover a coluna 'cnpj' da tabela do 1° ano, pois não existe na tabela do 2° ano e não é utilizado
-    RPA_inter(key_1, valor_1, key_2, valor_2, conn_1ano, conn_2ano)
-
+    if key_2 != "duas_tabelas":  # Ignora a entrada especial "duas_tabelas"
+        RPA_inter(key_1, valor_1, key_2, valor_2, conn_1ano, conn_2ano)
+    else:
+        RPA_inter_empresa_unidade(key_1, valor_1, valor_2, conn_1ano, conn_2ano)
+    
