@@ -10,7 +10,7 @@ on:
   # Define o agendamento usando a sintaxe CRON
   schedule:
     # Roda todos os dias às 12:00 UTC (09:00 no horário de Brasília)
-    - cron: '05 12 * * *'
+    - cron: '15 15 * * *'
 
 jobs:
   build:
