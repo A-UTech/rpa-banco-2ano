@@ -8,10 +8,10 @@ load_dotenv()
 # Conectar ao banco PostgreSQL do 1° ano
 try:
     conn_1ano = psycopg2.connect(
-        dbname=os.getenv("DBNAME_1ano"),
-        user=os.getenv("USER"),
-        password=os.getenv("PASSWORD"),
-        host=os.getenv("HOST"),
+        dbname=os.environ.get("DBNAME_1ano"),
+        user=os.environ.get("USER"),
+        password=os.environ.get("PASSWORD"),
+        host=os.environ.get("HOST"),
     )
     cur_1ano = conn_1ano.cursor()
 except Exception as e:
@@ -20,10 +20,10 @@ except Exception as e:
 # Conectar ao banco PostgreSQL do 2° ano
 try:
     conn_2ano = psycopg2.connect(
-        dbname=os.getenv("DBNAME_2ANO"),
-        user=os.getenv("USER"),
-        password=os.getenv("PASSWORD"),
-        host=os.getenv("HOST"),
+        dbname=os.environ.get("DBNAME_2ANO"),
+        user=os.environ.get("USER"),
+        password=os.environ.get("PASSWORD"),
+        host=os.environ.get("HOST"),
     )
     cur_2ano = conn_2ano.cursor()
 except Exception as e:
