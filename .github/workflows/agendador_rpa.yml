@@ -1,0 +1,39 @@
+# .github/workflows/agendador_rpa.yml
+
+name: Agendador do RPA Python
+
+# Gatilho (trigger): Define quando a automação vai rodar
+on:
+  # Permite rodar manualmente pela aba Actions do GitHub
+  workflow_dispatch:
+
+  # Define o agendamento usando a sintaxe CRON
+  schedule:
+    # Roda todos os dias às 12:00 UTC (09:00 no horário de Brasília)
+    - cron: '0 12 * * *'
+
+jobs:
+  build:
+    # Define o sistema operacional do runner
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa o código do seu repositório para o runner
+      - name: Checkout do Repositório
+        uses: actions/checkout@v3
+
+      # 2. Configura o ambiente Python na versão desejada
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      # 3. Instala as dependências listadas no requirements.txt
+      - name: Instalar Dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Executa o seu script Python
+      - name: Executar o Script RPA
+        run: python RPA_Interdisciplinar.py # <-- Troque "main.py" pelo nome do seu script
