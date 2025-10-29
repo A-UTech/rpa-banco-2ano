@@ -8,7 +8,7 @@ load_dotenv()
 # Conectar ao banco PostgreSQL do 1° ano
 try:
     conn_1ano = psycopg2.connect(
-        dbname=os.environ.get("DBNAME_1ano"),
+        dbname=os.environ.get("DBNAME_1ANO"),
         user=os.environ.get("USER"),
         password=os.environ.get("PASSWORD"),
         host=os.environ.get("HOST"),
