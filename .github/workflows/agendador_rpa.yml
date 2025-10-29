@@ -36,4 +36,10 @@ jobs:
 
       # 4. Executa o seu script Python
       - name: Executar o Script RPA
+        env:
+          DBNAME_1ANO: ${{ secrets.DBNAME_1ANO }}
+          DBNAME_2ANO: ${{ secrets.DBNAME_2ANO }}
+          HOST: ${{ secrets.HOST }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          USER: ${{ secrets.USER }}
         run: python RPA_Interdisciplinar.py # <-- Troque "main.py" pelo nome do seu script
