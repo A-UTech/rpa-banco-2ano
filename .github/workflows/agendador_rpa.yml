@@ -5,12 +5,12 @@ name: Agendador do RPA Python
 # Gatilho (trigger): Define quando a automação vai rodar
 on:
   # Permite rodar manualmente pela aba Actions do GitHub
-  workflow_dispatch:
+  # workflow_dispatch:
 
   # Define o agendamento usando a sintaxe CRON
   schedule:
     # Roda todos os dias às 12:00 UTC (09:00 no horário de Brasília)
-    - cron: '0 12 * * *'
+    - cron: '10 11 * * *'
 
 jobs:
   build:
