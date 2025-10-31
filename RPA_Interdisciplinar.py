@@ -30,7 +30,7 @@ except Exception as e:
     print("Erro ao conectar com o banco de dados do 2°ano: ",e)
 
 # Inicialização de variáveis com o nome das tabelas para obter maior facilidade caso haja manutenção no código.   regiao é o campo de estado da tabela de unidade
-tabelas_1ano = {"planos": ["id","nome","mensalidade","armazenamento"], "condenas":["id","nome","tipo_condena"], "empresas":["id","nome","cnpj","unidade","regiao","id_planos","senha", "cidade"]}
+tabelas_1ano = {"planos": ["id","nome","mensalidade","armazenamento"], "condenas":["id","nome","tipo_condena"], "empresas":["id","nome","cnpj","unidade","estado","id_planos","senha", "cidade"]}
 tabelas_2ano = {"planos": ["id","nome","preco","armazenamento"], "condena":["id","nome","tipo"], "duas_tabelas": {
         "empresa": ["id", "nome"],
         "unidade": ["cnpj", "nome", "estado",  "id_plano", "senha","cidade"]
